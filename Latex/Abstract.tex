@@ -1,0 +1,78 @@
+%\input{preamble}
+%%\documentclass[12pt]{article}
+%\usepackage{fancyhdr}
+%\usepackage{indentfirst}
+%
+%\begin{document}
+%\fontsize{12}{20pt}\selectfont
+
+%\fancyhf{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%% 謝辭 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\cleardoublepage
+%\fontsize{12}{18pt}\selectfont
+
+\setlength{\parindent}{2em}
+\thispagestyle{empty}
+
+\vspace*{1cm}
+
+\begin{center}
+{\Large \bf 致謝}\\[20pt]     
+\end{center}
+
+	漫長的求學生涯要告一段落，從一個不愛讀書的小孩，莫名其妙竟然要從研究所畢業了，在政大這二年過得很充實也很開心，自己也從一個在兩年前對於未來工作方向迷茫大四生，逐漸了解自己想要成為怎樣的人。
+	
+	首先要先感謝我的指導教授\;周珮婷\;老師的指導，從一開始在討論研究主題，就給我很大的空間，讓我能在有興趣的領域進行研究，也能在當我遇到研究瓶頸的時候，立即提出有效的建議，過程中不僅指點我的學業，也幫助我慢慢重拾學習的熱情，使我的研究一步步有了明確的方向。對於寫論文這件事，老師很有耐心的幫我看，給我很好的建議，讓我能夠順利完成。在我當統計學助教時，也給了我很多鼓勵，真的非常感謝老師給我的幫助。
+	
+	感謝研究室的同學們，要多麼幸運才能遇到大家，我絕對不會忘記與大家一起學習一起玩樂的日子，不管是做甚麼，有你們在，稀鬆平常的小事都會很有趣，陪我創造了很多難忘的回憶，讓我的政大生活那麼的美好，確實考了研究所認識你們是人生最對的選擇之一。也感謝我的好朋友們，沒有你們不會有現在的我，相信我們都是在正確的道路上努力著。
+
+	最後謝謝我的家人，對於我的任性總是很包容，讓我能夠順利完成碩士班學業。這兩年來真的是我人生最重要的兩年，改變了我很多，對於這期間遇到的所有人都很感恩，謝謝政大統研，祝大家在未來都能成為更好的自己。
+
+
+\begin{flushright} 
+{陳麒仲\\ 國立政治大學統計學系\\ June 2022\\}
+\end{flushright} 
+
+\vspace*{1cm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% 摘要 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\fontsize{12}{18pt}\selectfont  
+\setlength{\parindent}{2em} 
+\thispagestyle{empty}  
+\vspace*{1cm}  
+
+\begin{center} 
+{\Large \bf 摘要}\\[20pt]      
+\end{center}
+
+   	在這網路發達的時代，人們使用線上訂房網站做預訂旅館已經是稀鬆平常的事，旅館在網站上的評價，也會直接影響旅客在訂房上的選擇。隨著增加自身旅館的評分、減少旅客回應的負面評論，是每家旅館業者所追求的目標，尤其是如何減少負面評論更為重視，所以針對負面評論內提到的問題，去制定改善計畫提升旅館的評價，是個有效的治本方法。對於旅客也希望能夠住到滿意的旅館，不會去影響自身的旅遊體驗，但訂房過程還需要查看每家旅館的資訊，所以經由系統去推薦適合的旅館，不僅能省時也能省力。
+   	
+	本研究透過網路爬蟲，蒐集訂房網站Booking.com上南北歐各一個熱門旅遊國家的旅館評論，以文字探勘TF-IDF的方法，配上資訊度量條件熵的方法，找尋特定國家旅館的負面關鍵字，幫助當地旅館業者能制定降低負面評論的計畫，以及定義真實負面評論旅客的標籤，透過詞向量模型和受歡迎的機器學習的分類演算法做出預測，為了著重在抓出真實負面評論旅客，模型評估指標選擇使用Recall、F1 Score、AUC Score當標準，結果顯示以Word2Vec訓練的詞向量模型，以及擅長處於不平衡資料的SVM分類模型，兩者的組合模型成效較佳，尤其是由輸入中間的詞，去預測周圍的詞的Skip gram模型更優於CBOW。最後根據預測出的真實負面評論旅客，針對其留過的負面評論，去計算與每間熱門旅館負面關鍵字的餘弦相似度得分，推薦相似度得分較低的旅館。
+
+\vspace*{1cm}
+\noindent {\scshape 關鍵詞}: 旅遊評論、TF-IDF、條件熵、Word2Vec、SVM、餘弦相似度
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% ABSTRACT %%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage 
+\cleardoublepage 
+%\fontsize{12}{18pt}\selectfont  
+\setlength{\parindent}{2em} 
+\thispagestyle{empty}  
+\vspace*{1cm} 
+
+\begin{center} 
+{\Large \bf Abstract}\\[20pt]      
+\end{center}
+	
+In this era of the developed Internet, it is common for people to use online booking websites to make hotel reservations. The evaluation of hotels on the website will also directly affect the choice of travelers in booking. Every hotel operator wants to increase the rating of its hotel and reduce the negative reviews responded to by tourists. In particular, reducing negative reviews is more important. Therefore, we should formulate improvement plans for the problems mentioned in the negative reviews. The goal of this research is to help local hoteliers to develop a plan to reduce negative reviews. The web crawlers technique was used to collect hotel reviews on Booking.com. The method of text mining TF-IDF coupled with measuring conditional entropy of information to find the negative keywords of hotels in a specific country was used. Word vector models and popular machine learning classification algorithms were performed to identify the negative review travelers. The model evaluation indicators used are Recall, F1 Score, and AUC Score. The results show that the word vector model trained with Word2Vec and the SVM classification model perform better in imbalanced data settings. The Skip-gram model for predicting surrounding words by inputting the middle word is better than CBOW. Finally, the cosine similarity score was calculated with the negative keywords for each popular hotel, and a hotel recommendation was provided.
+
+%\vspace*{1cm}
+\noindent {\scshape KEY WORDS}: Travel Reviews, TF-IDF, Conditional Entropy, Word2Vec, SVM, Cosine Similarity
+
+%\end{document}
+
+
