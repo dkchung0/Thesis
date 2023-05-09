@@ -1,0 +1,614 @@
+%\input{preamble}
+%%\usepackage{wallpaper}                                          % 使用浮水印
+%%\CenterWallPaper{0.6}{images/ntpu.eps}                           % 浮水印圖檔
+%\begin{document}
+%\fontsize{12}{22pt}\selectfont
+%\cleardoublepage
+%\thispagestyle{empty}
+%\setlength{\parindent}{2em}
+
+
+\chapter{研究結果}
+
+	本章節第一節會先簡單以文字雲呈現評論資料的文字雲，再以表格說明以TF-IDF和Conditional Entropy兩種方法所結合得到的關鍵字。第二節則是使用冰島和希臘這兩個國家的旅遊評論資料，對於三種詞向量模型配上三種機器學習分類模型，去比較模型預測結果和表現，第三節是透過前二節的方法結果，建立冰島和希臘兩個國家的推薦模型，依據找出的負面評論旅客，對其做出特定國家旅館推薦。
+	
+
+\section{特徵字}
+
+	經過資料前處理，先將兩個國家的旅館評論，以文字雲呈現如圖\ref{Fig1}，再將真實負面旅客的評論做成文字雲呈現。圖\ref{Fig2}，可以看到只取負面評論的文字雲，與不分情感的文字雲，以兩種不同的國家，其畫出來的結果都很類似，也說明了常出現在評論的就是那幾個字，只考慮頻率高的字，很難確認是否為負面評論中的關鍵字，例如:「breakfast」、「staff」、「small」，都是在正反情緒都有出現的高頻字。而一些正面的單詞也會出現在在圖\ref{Fig2}裡面，像是「good」、「nice」，這裡給出兩種原因，第一可能是文字雲只考慮單字，像是「good」在評論裡面會寫成「not good」，第二種是資料在定義標籤時，評論內只要出現負面詞句以及給低分，就給予真實負面評論旅客的標籤，但在批評旅館的同時，也在認為旅館表現好的地方給予稱讚。
+	
+\newpage
+
+	\begin{figure}[h!]
+	\centering
+	\subfloat[冰島]{\includegraphics[scale=0.3]{output/冰島文字雲.png}}
+	\subfloat[希臘]{\includegraphics[scale=0.3]{output/希臘文字雲.png}}
+	\caption{旅館評論文字雲}\label{Fig1}
+	\end{figure}
+	
+	\begin{figure}[h!]
+	\centering
+	\subfloat[冰島]{\includegraphics[scale=0.3]{output/冰島文字雲(不好).png}}
+	\subfloat[希臘]{\includegraphics[scale=0.3]{output/希臘文字雲(不好).png}}
+	\caption{旅客負面評論文字雲}\label{Fig2}
+	\end{figure}
+
+\noindent 以圖\ref{Fig3}為例，就是第二種情況，這則旅客評論同時有正面評論也有負面評論，且給旅館分數為4.6分，所以有褒有貶的情況下，正面字詞「good」將被納入文字雲的計算。因為旅客在留言時屬於主觀的，對於喜歡的服務和設施是給予稱讚，也會抱怨不喜歡的人事物，假設旅館沒有很明顯很大的缺陷下，不太可能所有旅客評論全部都留下負面的字眼，總而言之負面評論也會出現正面回饋。
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1.1]{論文內放的截圖/褒貶評論.png}
+	\caption{褒貶評論}
+	\label{Fig3}
+	\end{figure}
+
+	因為文字雲這個方式只能查看一個單詞在全部評論中出現的次數，我們不能確定最多出現次數的「breakfast」在旅客評論中，是稱讚早餐的好還是抱怨早餐，所以改用TF-IDF和Conditional Entropy來找尋特徵字，使用TF-IDF的好處，能夠考慮到這個評論中單詞的逆文檔頻率，還有一個優點可以考慮到兩個詞以上，像是「good breakfast」和「bad breakfast」，這樣就能分辨出「breakfast」是否為負面評論關鍵字，以及Conditional Entropy的方法，去查看這個關鍵字，在分正面和負面兩類時候的不確定程度。 
+	
+	由冰島的評論資料找出的30個負面關鍵字，將結果列在表\ref{tab1}，從左邊的一個單詞可以看到前幾名的關鍵字，都是較為負面的詞，但因為都是形容詞，無法具體的說明旅館遇到的問題，則考慮二個單詞以上的結果，能發現冰島旅館被抱怨的具體問題，像是負面關鍵字「dead fly」，旅館就能透過改善衛生環境，降低負面評論的可能性，去提升飯店的品質。而希臘30個負面關鍵字可以看到表\ref{tab2}，關鍵字「rude staff」說明了旅客對於旅館員工的行為抱持著厭惡的態度，旅館需要去加強員工的訓練，以防旅客遇到不好的服務體驗。
+	
+	\begin{table}[H] 
+	\centering
+	\caption{冰島旅館30個負面關鍵字}
+	\begin{tabular}{|cc||cc|}
+	\toprule
+	一個單詞 & Conditional Entropy & 二個單詞以上 & Conditional Entropy \\
+	\midrule
+	terrible & 0.31755 & dead fly & 0.11992\\
+	\midrule
+	dirty & 0.32834 & bad place & 0.13673 \\
+	\midrule
+	unpleasant & 0.43819 & bad value money & 0.15765 \\
+	\midrule
+	poor & 0.45327 & bad value  & 0.15972 \\
+	\midrule
+	broken & 0.4548 & bad experience & 0.1847 \\
+	\midrule
+	impossible & 0.49224 & bad hotel & 0.18562 \\
+	\midrule
+	bad & 0.51742 & dirty bathroom & 0.19334 \\
+	\midrule
+	sheet & 0.52137 & unfriendly staff & 0.19334 \\
+	\midrule
+	uncomfortable & 0.53064 & dirty room & 0.21009 \\
+	\midrule
+	tiny & 0.61871 & room dirty & 0.22408 \\
+	\midrule
+	picture & 0.62441 & bathroom dirty & 0.24231 \\
+	\midrule
+	photo & 0.63214 & smell bad & 0.27793 \\
+	\midrule
+	smell & 0.64745 & bad room & 0.30879 \\
+	\midrule
+	customer & 0.67065 & impossible sleep & 0.32665 \\
+	\midrule
+	wall & 0.6823 & light bulb & 0.34353 \\
+	\midrule
+	furniture & 0.683 & poor quality & 0.36247 \\
+	\midrule
+	tell & 0.68941 & bad smell & 0.36693 \\
+	\midrule
+	pay & 0.71823 & noisy hear & 0.37072 \\
+	\midrule
+	mattress & 0.71902 & really bad & 0.38042 \\
+	\midrule
+	hair & 0.7228 & uncomfortable bed & 0.38149 \\
+	\midrule
+	great & 0.72562 & tiny room & 0.40091 \\
+	\midrule
+	say & 0.74063 & worth price & 0.42407 \\
+	\midrule
+	possible & 0.74304 & extremely noisy & 0.43073 \\
+	\midrule
+	change & 0.74436 & non existent & 0.43361 \\
+	\midrule
+	loud & 0.77006 & euro night & 0.43468 \\
+	\midrule
+	ask & 0.77198 & breakfast poor & 0.437 \\
+	\midrule
+	noisy & 0.77301 & poor breakfast & 0.44083 \\
+	\midrule
+	despite & 0.774 & bed uncomfortable & 0.46145 \\
+	\midrule
+	elevator & 0.77902 & previous guest & 0.49311 \\
+	\midrule
+	old & 0.78096 & extremely small & 0.49806 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab1}   
+	\end{table}
+	
+	\begin{table}[H] 
+	\centering
+	\caption{希臘旅館30個負面關鍵字}
+	\begin{tabular}{|cc||cc|}
+	\toprule
+	一個單詞 & Conditional Entropy & 二個單詞以上 & Conditional Entropy \\
+	\midrule
+	rude & 0.2853 & rude staff &  0.07794 \\
+	\midrule
+	horrible & 0.29051 & dirty room &  0.13414 \\
+	\midrule
+	awful & 0.31702 & poor condition & 0.16379 \\
+	\midrule
+	dirty & 0.36849 & dirty bathroom & 0.17333 \\
+	\midrule
+	terrible & 0.42915 & staff rude & 0.18418 \\
+	\midrule
+	broken & 0.47214 & room dirty & 0.19665 \\
+	\midrule
+	bad & 0.50844 & bad experience & 0.22343 \\
+	\midrule
+	unpleasant & 0.52643 & bad hotel & 0.261 \\
+	\midrule
+	poor & 0.55714 & bad smell & 0.26472 \\
+	\midrule
+	dangerous & 0.57023 & hotel bad & 0.32387 \\
+	\midrule
+	smell & 0.58087 & bad breakfast & 0.34201 \\
+	\midrule
+	uncomfortable & 0.5902 & bad location & 0.34707 \\
+	\midrule
+	photo & 0.59026 & room bad & 0.36306 \\
+	\midrule
+	drug & 0.61226 & furniture old & 0.38852 \\
+	\midrule
+	tell & 0.63318 & extremely noisy & 0.39885 \\
+	\midrule
+	great & 0.64665 & poor quality & 0.40679 \\
+	\midrule
+	impossible & 0.67377 & low quality & 0.4127 \\
+	\midrule
+	picture & 0.67726 & really bad & 0.41583 \\
+	\midrule
+	tiny & 0.6998 & like picture & 0.41734 \\
+	\midrule
+	sheet & 0.70318 & good thing & 0.42334 \\
+	\midrule
+	pay & 0.70902 & uncomfortable bed & 0.42739 \\
+	\midrule
+	conditioner & 0.7195 & tiny room & 0.42779 \\
+	\midrule
+	charge & 0.73257 & bad room & 0.43593 \\
+	\midrule
+	helpful & 0.73558 & bed uncomfortable & 0.44907 \\
+	\midrule
+	card & 0.73633 & breakfast bad & 0.48655 \\
+	\midrule
+	book & 0.74625 & breakfast poor & 0.49029 \\
+	\midrule
+	furniture & 0.75137 & room poor & 0.50474 \\
+	\midrule
+	sleep &  0.75457 & location bad & 0.51932 \\
+	\midrule
+	wall & 0.7615 & impossible sleep & 0.52035 \\
+	\midrule
+	toilet & 0.76447 & smell room & 0.52184 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab2}   
+	\end{table}
+	   
+	
+\section{模型結果}
+
+	不同的詞嵌入方法配合三種機器學習的模型，可能會影響最後的預測結果。在預測之前，這裡先將資料分為80\%的訓練集與20\%的測試集，而資料則採用兩個國家的旅客評論資料去討論。因為是不平衡資料，第2.1小節考慮到類別權重，則對模型中的少數類別調高類別權重，這裡因為少數類別和多數類別比是1:32，則權重選擇用10到100，每次增加10，觀察是否會影響預測的結果，這裡分別以Random Forest和SVM去比較模型結果，模型使用Recall去衡量好壞。第2.2小節則加入GBDT模型，加上2.1小節的結果，模型指標則加入F1 score和AUC score，去比較和選擇最佳的模型組合。
+	
+\subsection{類別權重}
+
+	這筆資料使用冰島旅客評論，從表\ref{tab3}中隨機森林的結果可以看到，當配上CBOW模型時，比其他三種方法較好一點，而且隨著權重的提高，可以看到Recall有變高的趨勢，當類別權重為100時，可以得到最高的Recall為0.06564，而最低的是配上Skip gram模型且類別權重只有10的情況下，Recall只有0.00875。
+	
+	\begin{table}[H]
+	\centering
+	\caption{隨機森林不同權重下的Recall(冰島)}
+	\begin{tabular}{|c|cccc|}
+	\toprule
+	 Weight & BOW+RF & TFIDF+RF & CBOW+RF & SKIP+RF \\
+	\midrule
+	10 & 0.02697 & 0.01659 & 0.02844 & 0.00875 \\
+	\midrule
+	20 & 0.02489 & 0.02904 & 0.04157 & 0.01969 \\
+	\midrule
+	30 & 0.02904 & 0.02697 & 0.04814 & 0.03063 \\
+	\midrule
+	40 & 0.03112 & 0.02697 & 0.05689 & 0.03063 \\
+	\midrule
+	50 & 0.02697 & 0.03319 & 0.05470 & 0.03938 \\
+	\midrule
+	60 & 0.03319 & 0.03319 & 0.05689 & 0.03282 \\
+	\midrule
+	70 & 0.03319 & 0.03734 & 0.06126 & 0.03719 \\
+	\midrule
+	80 & 0.03112 & 0.03319 & 0.05908 & 0.03719 \\
+	\midrule
+	90 & 0.03941 & 0.04356 & 0.06345 & 0.03719 \\
+	\midrule
+	100 & 0.03941 & 0.03734 & 0.06564 & 0.04157 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab3}
+	\end{table}
+	
+從表\ref{tab4}中SVM的結果可以看到，SVM的表現在這筆資料的預測結果，明顯優於隨機森林很多，而當SVM配上Skip gram模型時可以得到最佳表現，但CBOW模型的表現也不錯，Recall的表現也是將近6成多，再來是詞袋模型，表現最差的是TF-IDF模型，權重的部分跟隨機森林一樣，Recall也有變高的趨勢，當類別權重超過70的Skip gram模型，會得到Recall為0.73960。
+	
+	\begin{table}[H]
+	\centering
+	\caption{SVM不同權重下的Recall(冰島)}
+	\begin{tabular}{|c|cccc|}
+	\toprule
+	 Weight & BOW+SVM & TFIDF+SVM & CBOW+SVM & SKIP+SVM \\
+	\midrule
+	10 & 0.21784 & 0.18879 & 0.64332 & 0.68708 \\
+	\midrule
+	20 & 0.26348 & 0.18879 & 0.67833 & 0.73304 \\
+	\midrule
+	30 & 0.27385 & 0.18879 & 0.67614 & 0.73741 \\
+	\midrule
+	40 & 0.27800 & 0.18879 & 0.67833 & 0.73741 \\
+	\midrule
+	50 & 0.28838 & 0.18879 & 0.67833 & 0.73304 \\
+	\midrule
+	60 & 0.28630 & 0.18879 & 0.67833 & 0.73522 \\
+	\midrule
+	70 & 0.29045 & 0.18879 & 0.67833 & 0.73960 \\
+	\midrule
+	80 & 0.28838 & 0.19087 & 0.67833 & 0.73960 \\
+	\midrule
+	90 & 0.28215 & 0.19087 & 0.67833 & 0.73960 \\
+	\midrule
+	00 & 0.28630 & 0.19087 & 0.67833 & 0.73960 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab4}
+	\end{table}
+	
+最後將表\ref{tab3}和表\ref{tab4}的結果，繪製在圖\ref{Fig4}上，在使用冰島的資料下，可以清楚的發現SVM的模型不管配上哪種詞向量模型，Recall的表現都比隨機森林這個模型好，對於不平衡的文本情緒分類，SVM處理優於隨機森林，而調整類別權重會影響到Recall，。
+		
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.45]{output/冰島模型比較.png}
+	\caption{冰島旅館模型(權重 vs. Recall)}
+	\label{Fig4}
+	\end{figure}
+	
+	使用另一筆資料希臘旅客評論，從表\ref{tab5}中隨機森林的結果可以看到，Word2Vec的兩種模型在這裡都表現較差，而詞袋模型普遍在多個不同權重下表現較好，而當隨著權重提高到100時，可以看到TF-IDF模型的Recall達到最高的0.07407。
+	
+	\begin{table}[H]
+	\centering
+	\caption{隨機森林不同權重下的Recall(希臘)}
+	\begin{tabular}{|c|cccc|}
+	\toprule
+	 Weight & BOW+RF & TFIDF+RF & CBOW+RF & SKIP+RF \\
+	\midrule
+	10 & 0.04320 & 0.01851 & 0.01293 & 0.01293 \\
+	\midrule
+	20 & 0.04732 & 0.03292 & 0.02586 & 0.01508 \\
+	\midrule
+	30 & 0.05349 & 0.03497 & 0.02370 & 0.01293 \\
+	\midrule
+	40 & 0.05967 & 0.03703 & 0.03448 & 0.01939 \\
+	\midrule
+	50 & 0.05349 & 0.04115 & 0.03232 & 0.01508 \\
+	\midrule
+	60 & 0.05144 & 0.04526 & 0.04094 & 0.01293 \\
+	\midrule
+	70 & 0.05349 & 0.05555 & 0.02801 & 0.02155 \\
+	\midrule
+	80 & 0.06172 & 0.05349 & 0.03448 & 0.02155 \\
+	\midrule
+	90 & 0.06172 & 0.05349 & 0.03879 & 0.02370 \\
+	\midrule
+	100 & 0.06584 & 0.07407 & 0.03663 & 0.02155 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab5}
+	\end{table}
+	
+\newpage
+	
+從表\ref{tab6}中SVM的結果可以看到，SVM的表現在這筆資料，也是明顯優於隨機森林很多，而當SVM配上Word2Vec的兩種模型表現較好，再來是詞袋模型，表現最差的是TF-IDF模型，權重的部分也跟隨機森林一樣，Recall也有變高的趨勢，當類別權重超過60的Skip gram模型，會得到Recall為0.69827。
+
+	\begin{table}[H]
+	\centering
+	\caption{SVM不同權重下的Recall(希臘)}
+	\begin{tabular}{|c|cccc|}
+	\toprule
+	 Weight & BOW+SVM & TFIDF+SVM & CBOW+SVM & SKIP+SVM \\
+	\midrule
+	10 & 0.32304 & 0.23868 & 0.60991 & 0.61853 \\
+	\midrule
+	20 & 0.34567 & 0.23868 & 0.66810 & 0.68103 \\
+	\midrule
+	30 & 0.36419 & 0.24074 & 0.67456 & 0.68534 \\
+	\midrule
+	40 & 0.37448 & 0.23868 & 0.67672 & 0.69612 \\
+	\midrule
+	50 & 0.37654 & 0.23868 & 0.68103 & 0.69612 \\
+	\midrule
+	60 & 0.37654 & 0.23868 & 0.67672 & 0.69827 \\
+	\midrule
+	70 & 0.37860 & 0.23868 & 0.67672 & 0.69827 \\
+	\midrule
+	80 & 0.37860 & 0.23868 & 0.67887 & 0.69827 \\
+	\midrule
+	90 & 0.37860 & 0.23868 & 0.67887 & 0.69827 \\
+	\midrule
+	00 & 0.38271 & 0.23868 & 0.67887 & 0.69827 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab6}
+	\end{table}
+
+最後將表\ref{tab5}和表\ref{tab6}的結果，繪製在圖\ref{Fig5}上，在使用希臘的資料下，能明顯的發現SVM模型不管配上哪種詞向量模型，Recall的表現都比隨機森林這個模型好，對於不平衡的文本情緒分類，SVM處理優於隨機森林，而調整類別權重也會影響到Recall。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.45]{output/希臘模型比較.png}
+	\caption{希臘旅館模型(權重 vs. Recall)}
+	\label{Fig5}
+	\end{figure}
+	
+\newpage
+
+\subsection{模型比較}
+
+	將冰島的資料，對於不同模型組合下的結果，總結在表\ref{tab7}，這裡多考慮兩種模型指標F1 Score和AUC Score，也能從表\ref{tab7}發現，Word2Vec的兩種方法再配上隨機森林或是GBDT時，模型的Recall和F1 Score表現沒有那麼好，甚至在與GBDT的組合上，表現還略低於詞袋模型和TF-IDF模型，但是當配上SVM的情況下，模型的表現有大幅度的提升，不管是Recall或F1 Score都是與其他兩種詞向量模型有著很大的差距。而在AUC Score上也是與SVM的組合為較佳，其次是與GBDT的組合，總而言之在冰島這筆資料得出Skip gram模型與SVM是最佳組合，在三個模型指標上都是最佳的表現。
+	
+	\begin{table}[H]
+	\centering
+	\caption{模型組合績效比較(冰島)}
+	\begin{tabular}{|c|ccc|}
+	\toprule
+	模型組合 & Recall & F1 Score & AUC Score \\
+	\midrule
+	BOW+RF & 0.03941 & 0.05850 & 0.84961 \\
+	\midrule
+	BOW+SVM & 0.29045 & 0.28475 & 0.87043  \\
+	\midrule
+	BOW+GBDT & 0.18672 & 0.27314 & 0.89567  \\
+	\midrule
+	TFIDF+RF & 0.04356 & 0.06642 & 0.87279 \\
+	\midrule
+	TFIDF+SVM & 0.19087 & 0.27786 & 0.90735  \\
+	\midrule
+	TFIDF+GBDT & 0.14522 & 0.21472 & 0.89522  \\
+	\midrule
+	W2v(CBOW)+RF & 0.06564 & 0.11985 & 0.82272 \\
+	\midrule
+	W2v(CBOW)+SVM & 0.67833 & 0.42608 & 0.93825 \\
+	\midrule
+	W2v(CBOW)+GBDT & 0.13785 & 0.22743 & 0.92523  \\
+	\midrule
+	W2v(SKIP)+RF & 0.04157 & 0.07317 & 0.78807 \\
+	\midrule
+	W2v(SKIP)+SVM & 0.73960 & 0.43636 & 0.93996 \\
+	\midrule
+	W2v(SKIP)+GBDT & 0.13347 & 0.21981 & 0.93736  \\
+	\bottomrule
+	\end{tabular}
+	\label{tab7}
+	\end{table}
+	
+	將\ref{tab7}的表格資料，依照Recall的大小做排序，再經由長條圖\ref{Fig6}的呈現，也能清楚的看到模型組合比較結果。
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.65]{output/冰島模型比較圖.png}
+	\caption{模型組合比較圖(冰島)}
+	\label{Fig6}
+	\end{figure}
+	
+	
+	將試另一筆希臘的資料，對於不同模型組合下的結果，總結在表\ref{tab8}上，能發現其實模型組合的結果，與冰島這筆資料所呈現的大致相同，同樣的也是Skip gram模型與SVM為最佳組合，但唯一值得一提的是在Recall上的表現沒有像冰島的資料一樣，能夠破7成，而CBOW模型與SVM的組合也在F1 Score上，略表現好於SKIP模型與SVM的組合，將\ref{tab8}的表格資料，如同圖\ref{Fig6}的呈現方式，畫出圖\ref{Fig7}。
+	
+	\begin{table}[H]
+	\centering
+	\caption{模型組合績效比較(希臘)}
+	\begin{tabular}{|c|ccc|}
+	\toprule
+	模型組合 & Recall & F1 Score & AUC Score \\
+	\midrule
+	BOW+RF & 0.06584 & 0.10000 & 0.85652  \\
+	\midrule
+	BOW+SVM & 0.38271 & 0.35722 & 0.85794 \\
+	\midrule
+	BOW+GBDT & 0.19135 & 0.28353 & 0.90168 \\
+	\midrule
+	TFIDF+RF & 0.07407 & 0.11538 & 0.87405  \\
+	\midrule
+	TFIDF+SVM & 0.24074 & 0.32584 & 0.90926  \\
+	\midrule
+	TFIDF+GBDT & 0.12962 & 0.19504 & 0.89760 \\
+	\midrule
+	W2v(CBOW)+RF & 0.04094 & 0.06477 & 0.84851 \\
+	\midrule
+	W2v(CBOW)+SVM & 0.67887 & 0.40905 & 0.92891 \\
+	\midrule
+	W2v(CBOW)+GBDT & 0.12567 & 0.20386 & 0.92700 \\
+	\midrule
+	W2v(SKIP)+RF & 0.02370 & 0.04573 & 0.80537 \\
+	\midrule
+	W2v(SKIP)+SVM & 0.69827 & 0.40769 & 0.93064  \\
+	\midrule
+	W2v(SKIP)+GBDT & 0.13146 & 0.21746 & 0.93009  \\
+	\bottomrule
+	\end{tabular}
+	\label{tab8}
+	\end{table}
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.65]{output/希臘模型比較圖.png}
+	\caption{模型組合比較圖(希臘)}
+	\label{Fig7}
+	\end{figure}
+	
+	最後我們將畫出希臘這筆資料的ROC曲線(Receiver Operating Characteristic Curve)，則挑選每種詞向量模型配上機器學習分類模型，其最好的AUC Score，當作挑選準則，如圖\ref{Fig8}。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.45]{output/希臘roc.png}
+	\caption{模型組合的ROC曲線(希臘)}
+	\label{Fig8}
+	\end{figure}
+
+\newpage
+
+\section{推薦旅館}
+
+	對於那些留下負面評論的旅客，我們透過第二小節的結果，我們選擇使用Skip gram模型和SVM的組合，去預測出這類的旅客，在經由TF-IDF和Conditional Entropy的方法，我們找出每個旅館的關鍵字，在透過前面已經訓練好的Word2Vec的詞向量模型，去取得這些關鍵字的詞向量，以及負面旅客的評論也能利用此方式算出其詞向量，可由餘弦相似度去計算負面評論與特定旅館關鍵字的相似程度。這裡我們以圖\ref{Fig9}這個評論為例，這位旅客居住在冰島的Hotel Kjarnalundur（賈爾納倫杜酒店），得到很差的住宿體驗，透過訓練好的詞向量模型，將這則旅客評論轉為能夠運算的詞向量。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.65]{論文內放的截圖/旅館負面評論.png}
+	\caption{冰島旅館負面評論}
+	\label{Fig9}
+	\end{figure}
+
+\newpage
+	
+\noindent 舉例用7個英文句子，來算其相似程度，當餘弦值越接近1的時候，代表與其評論越相似，反之越接近-1時越不相似，如表\ref{tab9}，可以得知圖\ref{Fig9}有提到衛生環境的問題，還有像是旅館接待員粗魯的對待，所以第一句跟第四句，根據相似度計算出來的結果都是正的，而第二句和第五句稱讚旅館的正面回應與其負面評論結果大不相同，所以餘弦值算出來則為負的，最後是第七句提到的早餐不好，是個負面評論，但是與範例旅客留下的負面內容無關，所以算出來的餘弦值也是負的。
+	
+	\begin{table}[H]
+	\centering
+	\caption{與負面評論相似度計算示例}
+	\begin{tabular}{|c|c|c|}
+	\toprule
+	& 範例英文句子 & cosine similarity \\
+	\midrule
+	1 & The room is dirty. & 0.23143  \\
+	\midrule
+	2 & The hotel is very good and highly recommended. & -0.15019 \\
+	\midrule
+	3 & Bad wifi signal. & 0.06375  \\
+	\midrule
+	4 & There is a rude receptionist. & 0.28184 \\
+	\midrule
+	5 & The location of this hotel is good. & -0.02177\\
+	\midrule
+	6 & The weather today is good. & -0.07548 \\
+	\midrule
+	7 & Breakfast is really bad. & -0.07792 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab9}
+	\end{table}
+
+	所以透過以上的方式，我們會由TF-IDF和Conditional Entropy得到84家冰島旅館個字代表的負面評論的30個關鍵字，同樣的每個關鍵字都會有一個詞向量，將這些關鍵字與旅客留下的負面評論，去計算餘弦值。這邊的做法是算出後每個旅館將會有30個餘弦值，在從其中挑出最大的5個做平均，則每個旅館都會算出一個負面相似得分，最後再向旅客推薦負面相似得分的較低的前10家旅館。而這裡取最大的5個餘弦值，原因是為了要避免旅客再遇到相似問題的旅館，甚至旅客可能抱怨旅館不只一個問題，所以取了較多的關鍵字。從表\ref{tab10}可以經由這樣方法得到推薦的旅館名稱，而優先推薦給這位旅客的是Hótel Kría（科里亞酒店）。\\
+	
+	\begin{table}[H]
+	\centering
+	\caption{相似得分較低的前10家冰島旅館}
+	\begin{tabular}{|c|c|}
+	\toprule
+	冰島旅館名稱 & 負面相似得分 \\
+	\midrule
+	Hótel Kría（科里亞酒店） & 0.05993  \\
+	\midrule
+	Eyja Guldsmeden Hotel（艾加古斯米登酒店） & 0.06719 \\
+	\midrule
+	Midgardur by Center Hotels & 0.09090  \\
+	\midrule
+	Reykjavik Residence Apartment Hotel（雷克雅未克公寓酒店） & 0.09829 \\
+	\midrule
+	Icelandair Hotel Myvatn（米湖冰島之空酒店） & 0.09986\\
+	\midrule
+	Hali Country Hotel（哈利鄉村酒店） &  0.10310 \\
+	\midrule
+	Fosshotel Glacier Lagoon（冰河潟湖福斯酒店） & 0.10336 \\
+	\midrule
+	Eric the Red Guesthouse（埃里克紅旅館） & 0.10487 \\
+	\midrule
+	Guesthouse Carina（卡瑞納旅館） & 0.11001 \\
+	\midrule
+	Lilja Guesthouse（麗杰旅館） & 0.11315 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab10}
+	\end{table}
+	
+\noindent 這裡也透過驗證的方式，去列出負面相似得分高分的前10家旅館，從表\ref{tab11}能看到這位旅客原先住的旅館Hotel Kjarnalundur（賈爾納倫杜酒店)，位於不推薦的排名第四名，說明這樣方法的確能避開有類似問題的旅館。\\
+
+	\begin{table}[H]
+	\centering
+	\caption{相似得分較高的前10家旅館}
+	\begin{tabular}{|c|c|}
+	\toprule
+	冰島旅館名稱 & 負面相似得分 \\
+	\midrule
+	Puffin Hotel Vík（維克普費因酒店） & 0.24648  \\
+	\midrule
+	Loft - HI Hostel（閣樓- HI旅舍) & 0.23192 \\
+	\midrule
+	Guesthouse Bitra B \& B（比特拉住宿加早餐旅館） & 0.22482 \\
+	\midrule
+	Hotel Kjarnalundur（賈爾納倫杜酒店) &  0.21360 \\
+	\midrule
+	Stay Apartments Einholt（埃因霍特公寓酒店） &  0.21220 \\
+	\midrule
+	Sólheimahjáleiga Guesthouse（索爾海馬夏列卡農家樂） &  0.20980 \\
+	\midrule
+	Hotel Ísland – Spa \& Wellness Hotel & 0.20893 \\
+	\midrule
+	Hotel Hafnarfjall（哈芬納爾福爾酒店） &0.20876 \\
+	\midrule
+	Center Hotels Arnarhvoll & 0.20825 \\
+	\midrule
+	Guesthouse Fludir - Grund（弗洛蒂爾大地旅館） & 0.19636 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab11}
+	\end{table}
+	
+\newpage
+
+	同樣的用希臘的負面評論圖\ref{Fig10}為例，也能替這位在Metropolis Hotel（大都市酒店）有著不好旅遊體驗的旅客，為他在選定的70個希臘旅館中，推薦較適合的旅館，如表\ref{tab12}列出的前10家旅館。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.65]{論文內放的截圖/旅館負面評論2.png}
+	\caption{希臘旅館負面評論}
+	\label{Fig10}
+	\end{figure}
+	
+		\begin{table}[H]
+	\centering
+	\caption{相似得分較低的前10家希臘旅館}
+	\begin{tabular}{|c|c|}
+	\toprule
+	希臘旅館名稱 & 負面相似得分 \\
+	\midrule
+	Athens Hawks（科里亞酒店） & 0.27512  \\
+	\midrule
+	Athinaiko Hotel（阿西恩尼克酒店） & 0.28312 \\
+	\midrule
+	The Athens Gate Hotel（雅典門酒店） & 0.28420 \\
+	\midrule
+	Minoa Athens Hotel（雅典彌諾阿酒店） & 0.29753 \\
+	\midrule
+	Centrotel Hotel（薩特洛泰酒店） & 0.29960 \\
+	\midrule
+	Babis Hotel（巴比酒店） &  0.30310 \\
+	\midrule
+	Evripides Hotel（艾弗瑞派德酒店） & 0.31334 \\
+	\midrule
+	Hotel Fresh（弗萊士酒店） & 0.32233 \\
+	\midrule
+	Adam's Hotel（亞當酒店） & 0.32247 \\
+	\midrule
+	Infinity City Boutique Hotel（無限城精品酒店） & 0.32740 \\
+	\bottomrule
+	\end{tabular}
+	\label{tab12}
+	\end{table}
+
+%\end{document}
+
+
+
+
+
+
+
+
+
+
