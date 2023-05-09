@@ -1,0 +1,395 @@
+%\input{preamble}
+%%\usepackage{wallpaper}                                          % 使用浮水印
+%%\CenterWallPaper{0.6}{images/ntpu.eps}                           % 浮水印圖檔
+%\begin{document}
+%\fontsize{12}{22pt}\selectfont
+%\cleardoublepage
+%\thispagestyle{empty}
+%\setlength{\parindent}{2em}
+
+\chapter{研究方法}
+	
+	本章節第一節會先用可視化的研究流程圖，來說明整個研究的架構和過程。第二節會從評論資料如何取得，以及爬蟲爬了那些重要的欄位，還有將文字資料經過預處理，得到適合抓取關鍵字的評論資料，最後透過情感分析替資料標上標籤。第三節分別介紹兩種在文字特徵提取的領域中會使用到的方法，一種是基於統計方法，另一種是基於資訊度量。第四節運用三種詞嵌入的方法，去將評論資料轉成詞向量矩陣，再去建構詞向量模型。第五節主要是介紹三種在機器學習領域模型表現不錯的模型，去探討其演算法還有概念，最後再介紹分類模型會使用的衡量指標。
+	
+\newpage
+	
+\section{研究流程}
+
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1.35]{論文內放的截圖/研究流程圖.jpg}
+	\caption{研究流程圖}
+	\label{Fi3g1}
+	\end{figure}
+
+\newpage
+
+\section{資料蒐集與預處理}
+
+\subsection{資料蒐集}
+
+	本研究的資料來自於全球最大的旅遊電子商務公司之一的Booking.com，為了針對某特定地區的旅館，選擇北歐的冰島和南歐的希臘，透過網路爬蟲技術，蒐集該地區較受歡迎旅館歷史旅客的評分及評論，受歡迎的定義是選擇該旅館的評論數大於1000則，保持樣本的代表性。如圖\ref{Fi3g2}可以看到每家旅館都有綜合評分，以及Booking.com上制定的7大指標，有員工服務、設施、清潔度、舒適度、性價比、地點，還有一個跟其他訂房網站比較不常見的免費wifi，在這網路普及資訊大爆炸的時代，旅館提供的免費wifi與網路速度，是Booking.com著重考慮的指標。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.45]{論文內放的截圖/旅館評分.png}
+	\caption{Booking.com旅館評分示意圖}
+	\label{Fi3g2}
+	\end{figure}
+	
+\newpage
+	
+	每家旅館除了有綜合評分，也有歷史旅客評論能夠參考。旅客評論有旅客的名字、來自的國家、造訪的時間，以及最重要的評論內容，能透過旅客來自的國家，查看該地旅客來自國籍分布圖，如圖\ref{Fi3g3}左以南歐希臘為例，其旅客國籍分布圖，可以看到前5名來自法國、希臘、德國、義大利、英國的旅客，圖\ref{Fi3g3}右為北歐冰島旅客國籍分布圖，相較於希臘，台灣旅客比較常去冰島，佔冰島旅客評論數有2\%。\\
+	
+	\begin{figure}[h!]
+	\centering
+	\subfloat[希臘]{\includegraphics[scale=0.4]{output/希臘旅客國家.png}}
+	\subfloat[冰島]{\includegraphics[scale=0.4]{output/冰島旅客國家.png}}
+	\caption{旅客國籍分布圖}\label{Fi3g3}
+	\end{figure}
+	
+	國家的不同也會影響旅館分布的類型，如圖\ref{Fi3g3-1}左邊的希臘，資料中9成多的旅館類型都是為飯店，原因是希臘這個國家的歷史文化很豐富，觀光業占國內的生產總值約為四分之一，國家有很明確的觀光區域，大量的旅遊需求，是這些觀光飯店盛行的原因之一。而圖\ref{Fi3g3-1}右邊的冰島旅館類型，除了飯店約占5成多，而家庭旅館與青年旅館共占了3成多，原因是冰島的自然現象極光很有名，常常會出現在郊區，而這些地方會有經營著家庭式小生意的旅館，所以冰島的旅館不像希臘大部分都是飯店，旅館類型較為多元。
+	
+\newpage
+	
+	\begin{figure}[h!]
+	\centering
+	\subfloat[希臘]{\includegraphics[scale=0.38]{output/希臘旅館類型.png}}
+	\subfloat[冰島]{\includegraphics[scale=0.38]{output/冰島旅館類型.png}}
+	\caption{旅客國籍分布圖}\label{Fi3g3-1}
+	\end{figure}
+	
+	因為旅客文字評論涵蓋各個國家，每個國家所使用的語言大不相同，本研究目的是訓練出英文的情感分類模型，目標是探討英文評論，使用Python程式串接Google Cloud Translate API，將那些非英文評論的資料進行翻譯，Groves與Mundt(2015)也論證了Google翻譯的正確性很高，以及對於學術界的發展是有影響的。如圖\ref{Fi3g4}是一位來自德國的旅客留下的德文，經過翻譯會得到「It is a family guesthouse. There is even a microwave and dishes. The breakfast was very diverse and delicious. Highly recommended!」。所以將這些評論資料經過翻譯處理後，最後取得冰島84家旅館共75596筆資料，以及希臘70家旅館共77634資料。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{論文內放的截圖/網站翻譯例子.png}
+	\caption{Booking.com旅客評論示意圖}
+	\label{Fi3g4}
+	\end{figure}
+
+\subsection{評分標籤}
+
+	每筆評論在旅客留下評論的同時，都會給予旅館0到10的分數，根據這個分數以及圖\ref{Fi3g5}訂房網站內建定義的評價分數，9分以上為「好極了」、8分以上為「非常好」、7分以上為「好」，以及定義6分以上「還好」、不到6分為「不好」，以映射的方式對資料標上標籤。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1.2]{論文內放的截圖/網站內建評分.png}
+	\caption{Booking.com網站內建評分}
+	\label{Fi3g5}
+	\end{figure}
+	
+	
+	 這邊是以北歐冰島旅館評論資料為例，經過人工替資料標上評分標籤後，將各評價人數透過圖\ref{Fi3g6}顯示出來，可以看到大部分的評論的評價都是傾向正面，而大多數都是好極了，其中不好的評價不到10000則。推測有兩種可能，第一種可能是Booking.com熱門的冰島旅館的服務在旅客中大多數是滿意的，第二種可能則是前往該國家旅客，線上評分給予旅館業的分數不至於給太低，因為給分是主觀的，有可能給分高，但是在評論裡有許多負面反饋。
+	 
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.4]{output/冰島旅客評分.png}
+	\caption{旅客評論的評價}
+	\label{Fi3g6}
+	\end{figure}
+	
+\newpage
+	 
+\subsection{文字預處理}
+
+	旅客評論透過NLTK模組進行文字預處理，為了要分析評論的特徵字，以及原始資料涵蓋一些非英文字，像是表情符號，英文斷詞相較於中文斷詞容易很多，英文語句中每個單字間都有空格分割，斷詞後的每個單字即是獨立的一個詞。首先對每則評論進行正則化斷詞。將評論做斷詞後以及拿掉非英文數字的評論內容，接著透過模組停用字的詞庫，把評論中出現頻繁的功能詞拿掉，例如:「is」、「a」、「in」，這些功能詞影響去選擇旅客評論特徵詞，經過去除英文停用字後會得到一些非功能詞的集合。
+	
+	英文會出現同個意思動詞因為時態的不同，出現三個不同的字，或是形容詞的比較級，也會出現同個意思不同的字，例如:「good」、「better」、「best」，為了處理這樣的情形，首先需要對評論進行詞性還原，所以將剛剛處理過的評論，每個單字經過詞性標記後，再針對其標記的詞性去做詞性還原，最後得到處理好的評論資料。\\
+	
+\subsection{情感套件}
+
+	情感套件選擇用spacy對評論做情感分析，因為spacy是個在自然語言領域中受歡迎的開源軟體庫，相較於TextBlob只給出一個綜合的情感分數，spacy則會分別判斷此評論正面、中性、負面各自的分數，此彈性對於本研究去找出負面評論有較大的幫助。旅遊評論的情感有三種分數，因為想著重探討負面評論，所以只要一則評論中負面分數大於正面分數的情況下，就判定此則評論為負面評論，剩下正面情感的4個類別，根據正面分數與負面分數相減後的大小，依序標記「好極了」、「非常好」、「好」、「還好」。	
+	
+\newpage
+
+\subsection{負面評論標籤}
+
+	考慮到旅客在做評論時會有4種情形，第一種是住房體驗很好，給予旅館高分和正面評論，第二種是給予旅館很高分卻留下較負面評論，第三種人為給予旅館很低分，但評論卻留下較正面的評論，最後一種則是本研究想要考慮的旅客，給予旅館很低分和負面評論，可以看到圖\ref{Fi3g7}，以冰島的資料為例，評分以及評論一致的人大約有4成3左右，所以圖中2252則評論是評分在6分以下，同時評論判定為負面評論的旅客，根據結果最後新增一個變數為「真實負面旅客」，將這2252筆資料設為1，其他則設為0。
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{output/冰島旅客評分標籤vs評論標籤.png}
+	\caption{旅客評分標籤vs評論標籤}
+	\label{Fi3g7}
+	\end{figure}
+	
+\newpage
+
+
+\section{文字探勘}
+
+\subsection{TF-IDF}
+
+	TF-IDF是一個在文字領域常運用的統計方法，常用來評估某一字詞在一段文字中的重要程度，是由詞頻(term frequency)和逆向檔案頻率(inverse document frequency)組成。詞頻是代表單詞在每個文件中的頻率，這裡以t代表單詞、d代表文檔，公式如下:
+$$tf_{t,d} = \dfrac{n_{t,d}}{\sum^{}_{}n_{t,d}}$$
+
+\noindent 其中$n_{t,d}$代表單詞t在文檔d當中的次數，$\sum^{}_{}n_{t,d}$則是單詞t在每個文檔中次數的加總。逆向文檔頻率則代表字詞在所有文件的頻率，這裡的N代表文檔的數量，公式如下:
+$$idf_t = \ln\left(\dfrac{N}{1+|\{d\in D:t\in d\}|}\right)$$
+
+\noindent 其中$|\{d\in D:t\in d\}|$代表單詞t出現多少則文檔。這個方法是原先只有TF的理論基礎上再進行改進，目的是要找尋特徵字，但是某些字詞是旅遊評論的常用字，像是英文字詞「hotel」在評論中常常出現，若是只參照TF的高低，結果會選到一些常用字，並不是我們所想探討的評論特徵字，假設某家旅館評論有「hot tub」的問題，可能其他旅館的評論較少出現這樣的問題，這時「hot tub」這個字詞的IDF就會很大，可能就是我們所想探討的關鍵字。所以經過IDF可以替我們篩選掉常用字，而找到資訊含量高的關鍵字，總結TF-IDF完整公式如下:
+$$tfidf_{t,d} = tf_{t,d}\times idf_t$$
+\noindent 為了想探討各家旅館中旅遊評論中的特徵詞，我們將特定國家中的每個旅館的評論先切分為正面以及負面評論，第一個原因是在booking.com上的旅館，其正面和負面評論數量呈現不平衡，以上面資料蒐集得結果來看，負面評論佔一家旅館評論數量為少數。第二個原因則為了建置特定旅館的情感模型，想考慮到正面和負面的關鍵字。則本研究先運用TF-IDF算出特定國家每家旅館負面評論中重要的20個字詞。
+	
+\subsection{Conditional Entropy}
+
+	接著引進Conditional Entropy的概念，是一種度量資訊量的方法，來確認負面評論20個字詞實際重要性，因為這20個字詞中，有些字詞有機率會在其他分類的評價中出現，前面提到我們將正負評論分開來做，有可能正面評論中的關鍵字出現「breakfast」，正面評論旅客認為說旅館早餐是好的，但負面評論旅客因為口味的不同，認為說旅館早餐是不好的，同時在負面評論中出現「breakfast」，為了解決這樣的問題，則運用Conditional Entropy考慮再給定某字詞下，這個字詞對於類別分類不確定性的程度，算出來的值，期望是越小越好，說明此字詞訊息量越多，高機率能頻繁只出現在某個類別中，像是「breakfast」能在正反類別中都為關鍵字，其分類不確定性就很大，並不是一個重要性很高的詞。公式如下:
+$$H(Y|X=x)=-\sum_{y\in Y}p(y|x)\ln p(y|x)$$
+
+\noindent 因為屬於類別高度不平衡，所以對Conditional Entropy進行改良加上權重，去避免散算出來的Entropy不準，這邊舉例像是某一字詞在出現正負兩類的評論數分別是9900與100，看似這個字詞資訊度量的不確定很低，但實際資料發現正負兩類數量各為99000與1000，因為某一類裡的數量特別多，所以字詞出現在該類的數量也會較多。將原公式改寫，對條件機率進行展開加上類別權重，經過整理得到的公式如下:
+$$H_w(Y|X=x)=-\sum_{y\in Y}\dfrac{p(X=x|y)}{\sum_{y\in Y}p(X=x|y)}\ln \dfrac{p(X=x|y)}{\sum_{y\in Y}p(X=x|y)}$$
+
+\section{詞向量模型}
+
+	本研究想訓練一個模型能夠去預測出真實負面評論的旅客，首先會先將評論的文字資料轉成詞向量，原因是人類的邏輯語言是抽象的表達方式，但目的是想要建構一個量化的模型，所以需要將每則評論轉成電腦能夠理解的向量，這種概念稱作為詞嵌入(Word Embedding)，這裡使用了三種不同詞向量模型，依據不同方法所得到的詞向量，也會影響分類模型最終的表現。\\
+
+\subsection{Bag of words}
+	
+	Bag of words俗稱詞袋模型，原理是One hot encoding，認為一段文字中所有的詞，可以被裝進一個袋子。假設一則文檔中由100則評論組成，文檔不重複的字詞總共為10000個英文單字，則每則評論就都以長度為10000的向量所表示。這邊簡單舉例所有評論的單字總量共有10個字，其中某評論是「Double room is nice, but quadruple room is bad.」，將有的單字則以存在句子中數量表示，反之沒有則用0表示，這則評論轉為詞向量的表示如下:
+	
+	\begin{table}[h]
+	\centering
+	\begin{tabular}{cccccccccc}
+	\toprule
+	Double & triple & quadruple & room & is & are & nice & bad & but & too\\
+	\midrule
+	1 & 0 & 1 & 2 & 2 & 0 & 1 & 1 & 1 & 0 \\
+	\bottomrule
+	\end{tabular}
+	\end{table}
+	
+	
+	詞袋模型是很早就出現於計算語言學領域，優點為其原理直觀好懂，但是缺點也顯而易見，假設我們遇到的一則文檔詞彙量大，容易造成詞向量的維度太大，計算量則太過龐大。
+	
+\newpage
+
+\subsection{TF-IDF}
+	
+	TF-IDF不僅可以衡量字詞的重要性，其算出來的結果也能當作詞向量模型。透過前面提到的TF和IDF，可以將所有文字和評論轉為詞向量。這邊舉例某句子是「I am sad ,he is sad too.」，但這個模型會考慮其他句子出現的字，再假設每篇評論都有「I」，但只有這個句子中有「too」，「I」這個字的因為IDF，重要性就會不如「too」，則算出來的值越大就代表這個字在這個句子更重要，接著沒有的字用0去表示，其簡單示例結果如下:
+	
+	\begin{table}[h]
+	\centering
+	\begin{tabular}{cccccccccc}
+	\toprule
+	I & You & He & She & is & am & good & sad & too & and\\
+	\midrule
+	0.2 & 0 & 0.4 & 0 & 0.4 & 0.4 & 0 & 0.8 & 1.2 & 0 \\
+	\bottomrule
+	\end{tabular}
+	\end{table}
+	
+	這邊將上述TF-IDF所算出的每則評論詞向量，進行合併後會得到一個詞向量矩陣，本研究將特徵字的個數限制在1000，可以降低計算量，同時也保有TF-IDF本身的優點，特徵字會考慮到出現在其他則評論中的結果，對於Bag of words只看出現頻率有進行改善。
+	
+\newpage
+	
+\subsection{Word2vec}
+	
+	Word2vec是以深度學習為主要概念，經過訓練神經網路來得到詞向量模型。Word2ve與上述兩種詞向量模型，最大的不同是此模型有考慮詞在句子中的位置，為了使每個詞都能表達它在句子裡的意義。通常Word2vec伴隨著Word Embedding的概念，其目的是將字詞能夠投射到一個低維向量空間，在這個空間每個詞以向量表示，而且在這個向量空間中任兩個詞向量，可以通過餘弦相似度(Cosine Similarity)計算，去算出詞與詞之間的相似程度，如圖\ref{Fi3g8}表示。當計算出來的餘弦值愈接近1時，代表說這二個詞關係愈相近。假設有二個句子分別為「Iceland is good country.」、「Greece is good country.」，模型經過訓練就能得知「Iceland」 和「Greece」為關係相近的詞，其餘弦值也會接近1，因為實際上這兩個詞皆為國家名。
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1.0]{論文內放的截圖/餘弦相似度.png}
+	\caption{Cosine Similarity示意圖}
+	\label{Fi3g8}
+	\end{figure}
+	
+\newpage
+
+	前面提到Word2vec以神經網路去訓練，以訓練方式可分為不同的兩種模型CBOW和Skip-gram。這裡使用Mikolov等(2013)所提出論文內新的模型架構圖，如圖\ref{Fi3g9}。兩種模型的詞向量皆在神經網路中的Hidden layer中，經過多次迭代後會趨近最好的結果，Window size也是Word2vec中不可或缺的參數，意味著要參考上下文中的幾個詞去訓練，而圖\ref{Fi3g9}中的模型數Window size就為2，只考慮該單詞在句子中前後兩個詞。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.9]{論文內放的截圖/word2vec二種方法.png}
+	\caption{CBOW與Skip-gram 模型訓練示意圖}
+	\label{Fi3g9}
+	(資料來源:Mikolov, T.,et al.(2013, December))
+	\end{figure}
+	
+	為了去解決計算量偏大的問題，Mikolov等(2013)提出兩種改進方法，本研究以負採樣(Negative Sampling)去實施模型的優化。原本在訓練神經網路過程中，每當訓練一個神經樣本，就會調整到整個神經網路的的權重，當詞彙量太大時，整個神經網路的參數就會太多，導致訓練過程很慢，而負採樣可以解決一次訓練會更新到所有權重的問題，目的只去更新神經網路內的一小部分的權重，大大減少了計算量，其概念是從去預測所有單詞是附近單詞的機率，去改成去預測訓練樣本單詞是否為上下文的機率。
+	
+	這裡假設我們有句評論是「The recommended glacier hiking is very good.」，則原本是去預測$P(hiking|glacier)$，則經過負採樣我們是去預測$P(1|(hiking,glacier))$，其中1代表是為上下文。假設詞彙量為100000，原本在神經網路最後一層使用的Softmax，會是一個在100000個類別中進行分類，但使用負採樣的話，原先的問題則會變成100000個二元分類的問題，大幅的降低計算量。Mikolov等(2013)也在其論文說明，當遇到資料小時推薦選擇5到20個負樣本，則資料量大時只要選擇2到5個負樣本。
+	
+	第一個介紹CBOW模型，是由輸入上下文去預測中間的詞。首要目標是想要最大化式\ref{eq.4.3.1}，$Context(w)$是w這個詞的上下文，給定上下文的條件下，如果u是w，則是需要最大化條件機率，如果u是w的負樣本($NEG(w)$)，則是最小化條件機率，條件機率的算法如式\ref{eq.4.3.2}，其中$L^w(u)$當$u=w$時為1，反之為0，以及變數$X_w=\sum\limits_{u \in Context(w)}v(u)$，則模型目標為透過最大化概似函數如式\ref{eq.4.3.3}，去求得使得模型最大化的參數$\theta$，使用梯度上升法，經過一次次迭代得到最佳的$\theta$，最後就可用這個$\theta$去算得每個詞所對應的詞向量。
+	\begin{equation}\label{eq.4.3.1}
+	g(w)=\prod_{u\in {\{w\}\cup NEG(w)}}p\left(u|Context(w)\right)
+	\end{equation}
+
+	\begin{equation}\label{eq.4.3.2}
+	p\left(u|Context(w)\right)=\sigma(X_w^T\theta^u)^{L^w(u)}(1-\sigma(X_w^T\theta^u))^{1-L^w(u)}
+	\end{equation}
+	
+	\begin{equation}\label{eq.4.3.3}
+	G=\prod_{w\in D}g(w)
+	\end{equation}
+
+	第二個介紹模型為Skip-gram，與CBOW相反，是由輸入中間的詞，去預測周圍的詞。首要目標是想要最大化式\ref{eq.4.3.4}，這裡$c\in Context(w)$，給定中心詞w的條件下，去最大化z為上下文詞的條件機率，和最小化z為負樣本的條件機率，算法如式\ref{eq.4.3.5}，其他同理CBOW的過程，但不一樣的是將模型目標函數改寫為式\ref{eq.4.3.6}，而且相較於CBOW，Skip-gram的訓練模型時間較長。
+	\begin{equation}\label{eq.4.3.4}
+	g(c)=\prod_{z\in \{c\} \cup NEG(c)}p\left((z|w)\right)
+	\end{equation}
+	
+	\begin{equation}\label{eq.4.3.5}
+	p\left(z|w\right)=\sigma(v(w)^T\theta^z)^{L^c(z)}(1-\sigma(v(w)^T\theta^z))^{1-L^c(z)}
+	\end{equation}
+	
+	\begin{equation}\label{eq.4.3.6}
+	G=\prod_{w\in D}\prod_{c\in Context(w)}g(c)
+	\end{equation}
+	
+\newpage
+
+\section{分類模型}
+
+	本研究使用三種常見的分類模型Random Forest、GBDT、SVM，去配合詞向量模型去做預測。這三種模型都在機器學習領域很常見，其中Random Forest和GBDT分別運用到Ensemble learning中的Bagging和Boosting，Ensemble learning的方法常常會出現資料比賽中高預測率的模型中，目的就是希望將多個模型去結合，產生一個更加強大的模型，大幅去提升模型的預測準確率，而SVM也是個高效能的模型，Wu等(2007)列為資料探勘前10的演算法之一，透過核函數能有效地進行非線性分類，得到很高的分類的準確率。
+	
+\subsection{Random Forest}
+
+	隨機森林是以多棵CART樹，加入Ensemble learning的概念，能進行分類或是迴歸預測的強機器學習模型。CART是決策樹分類模型常使用的一種演算法，其核心概念是每個節點皆用二分法對資料進行分類，而樹節點分割則是採用information gain，當算出來的信息增益越大時，代表這個特徵能將資料分得越乾淨，其公式如下:
+	$$IG(D_p,f) = I_{gini}(D_p)-\sum_{i=1}^{m} \dfrac{N_i}{N_p}I_{gini}(D_i)$$
+	
+\noindent 而其中公式中的$D_p$與$D_i$分別代表父節點和第i個子節點，$N_i$與$N_p$則分別代表父節點和第i個子節點中的資料數量，最後I代表著不純度，這邊CART演算法對應的不純度算法是Gini impurity，當Gini值越小時，代表資料只屬於同一類的機率越高，資料越純淨。其公式如下:
+	$$I_{gini}(t) = 1-\sum_{j=1}^{c}p(j|t)^2$$
+
+\noindent CART樹的優點是可解釋性高，但缺點是當模型中樹的最大深度設定太大的時候，會導致模型變異數太大出現過擬合，因此有了隨機森林這個模型，目的是使用多個分類器，去降低只有單個分類器所產生的誤差。
+	
+	隨機森林所使用的是Ensemble learning裡的Bagging的方法，Bagging是統計上Boostrap抽樣方法的簡稱，其過程是將原始樣本進行k次的隨機抽樣，每次將會抽取n個樣本當作訓練集，這k次皆採用的是樣本抽後放回，所以會出現同一個樣本可能被抽取到好幾次，而這k個訓練集彼此間是相互獨立，將這k個訓練集通過模型訓練的過程，得到k個模型。對於分類問題，這k個模型的權重是一致的，採用的是投票的方式去決定最後分類的結果。另外遇到迴歸問題時，是用算平均數的方式去決定結果。
+	
+	隨機森林除了上述Bagging的傳統做法，另外再建置CART樹的過程中，連資料的特徵也採取抽樣的方式，如圖\ref{Fi3g10}示意圖。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{論文內放的截圖/隨機森林.png}
+	\caption{隨機森林示意圖}
+	(資料來源:https://community.tibco.com/wiki/random-forest-template-tibco-spotfire)
+	\label{Fi3g10}
+	\end{figure}
+	
+\newpage
+	
+	意味著在取得k個CART樹同時，每顆CART樹裡所選用的特徵也大不相同，增加了模型的異質性，這個步驟能使得在高維度的資料中能夠透過模型本身的特性，對資料進行降維。同樣的也能保留決策樹易解釋的優點，去比較在建置CART樹時每個節點下的Gini Index，評估每個特徵的重要性。隨機森林對於某個樣本下的預測值，透過下列公式表示:
+	$$RF(x)=\dfrac{1}{B}\sum_{i=1}^{B}T_{i,z_i}(x)$$
+
+\noindent 其中$T_i$代表是第i顆決策樹，$z_i$是對應每棵樹有不同的訓練樣本，	其中對於給定$x$，$T_{i,z_i}(x)$是服從相同的分配，因為資料集不變下，其採樣過程都為相同，但因為採樣方式為抽樣後放回，則$T_{i,z_i}$是彼此不獨立的。透過去計算$RF(x)$的變異數，可以看到當其他條件不變下，當模型增加決策樹的數量時，模型的變異數會隨之遞減，當決策樹的數量趨近無限的時後，最後能得到變異數的下限為$\rho\sigma^2$。其公式如下。
+	$$Var(RF(x))=\rho\sigma^2+\dfrac{1-\rho}{B}\sigma^2$$
+	
+\newpage
+
+\subsection{GBDT}
+	
+	GBDT(Gradient Boosting Decision Tree)是梯度提升決策樹的簡稱，這裡提到的決策樹也是採用CART樹，對於只有單棵的決策樹出現過擬合的問題，GBDT也能很好的解決。GBDT所採用的是Ensemble learning中Boosting的概念，Boosting以分類問題為例，第一次訓練模型就是將全部的原始資料進行模型的訓練，而分類結果可能會分類錯誤，演算法會將這次的錯誤資料的權重提高，在下一次分類時，模型會著重那些權重較高的錯誤資料下去訓練，所以每次在進行分類都是拿上一次分類結果的資料進行訓練，最後給予k次訓練出的模型不同的權重，分類準確率高的模型會得到較高的權重，接著透過線性組合將這些分類模型進行結合成一個最終的強機器學習模型，如圖\ref{Fi3g11}。\\
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{論文內放的截圖/boosting.png}
+	\caption{Boosting示意圖}
+	(資料來源:https://chih-sheng-huang821.medium.com/機器學習-ensemble-learning之bagging-boosting和adaboost-af031229ebc3)  
+	\label{Fi3g11}
+	\end{figure}
+
+\newpage
+
+	GBDT與傳統Boosting差別在，下一次訓練的模型不再是針對上一次分類錯誤的資料，而是著重在去減少上一次模型算出來的殘差，去保證每次訓練出的新模型的殘差，都會往梯度的方向減少，而這個殘差是透過損失函數的負梯度去估計。本研究著重在二分類問題，所採用的損失函數是使用對數概似函數，其公式如下:
+	$$L(\theta) = -y_i\ln\left( \hat{y_i} \right) - (1-y_i)\ln\left(1-\hat{y_i}\right)$$
+	
+\noindent 而對於一組樣本$(x_i,y_i)$，$\hat{y_i}$則是由$x_i$經由邏輯斯迴歸的預測函數所得到的，其公式如下:
+	$$h_{\theta}(x) = \dfrac{1}{1+e^{-\theta^{T}x}}$$
+
+\noindent 假設GBDT第M步迭代之後的分類器為$F(x)=\sum_{m=0}^{M}h_m(x)$，經過將$\hat{y_i}$替換後，損失函數可以改寫成的公式如下:
+	$$L\left(y_i,F(x_i)\right) = y_i\ln\left( 1+e^{-F(x_i)} \right) + (1-y_i)\ln \left[ F(x_i)+ln\left( 1+e^{-F(x_i)} \right) \right]$$
+
+\noindent 接著透過計算損失函數負梯度值，每次迭代都會去更新分類器，最後將所有分類器結合成最終的模型。
+
+\newpage
+
+\subsection{SVM}
+
+	SVM(Support Vector Machine)是支持向量機的簡稱，是由Vapnik等 (1995)提出，是一種基於統計機器學習的監督式學習算法，在很多領域都有與其相關的應用。SVM的概念是想透過一個超平面，將資料完美的分開，而且要使得離決策邊界最近的點與其本身距離最大。如圖\ref{Fi3g12}。
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1.2]{論文內放的截圖/svm.png}
+	\caption{SVM示意圖}
+	(資料來源:Noyum, V. D.,et al.(2021,January))
+	\label{Fi3g12}
+	\end{figure}
+	
+\newpage
+	
+	圖\ref{Fi3g12}中可以看到以$w^Tx+b=0$來表示超平面，而邊界分別以2種類別(-1,1)來表示，目的是極大化區隔兩類邊界的距離，其數學式表示如下:
+	$$ \mathop{min}\limits_w \dfrac{1}{2}w^Tw$$
+	$$ subject\ to\quad y_i(w^Tx_i+b)\geq 1, \forall i = 1,...,n$$
+	
+\noindent 但是現實遇到的資料很難可以將資料完美的分類，所以會容許一些資料分錯，所以我們會加入懲罰項，將數學式改寫為:
+	$$ \mathop{min}\limits_{w,\xi_i} \dfrac{1}{2}w^Tw+C\sum_{i=1}^{n}\xi_i $$
+	$$ subject\ to\quad y_i(w^Tx_i+b)\geq 1-\xi_i,\ \xi_i\geq 0 ,\forall i = 1,...,n$$
+	
+\noindent 但上述未知參數出現在限制中，沒辦法直接去解這個最佳化的問題，因此將原先的問題轉換成對偶問題，再透過Lagrange multiplier轉成Lagrange數學式如下:
+	$$\dfrac{1}{2}w^Tw+C\sum_{i=1}^{n}\xi_i-\sum_{i=1}^{n}\alpha_i \left(y_i(w^Tx_i+b)-1+\xi_i\right)-\sum_{i=1}^{n}\beta_i\xi_i$$
+
+\noindent 經由Karush-Kuhn-Tucker理論，去偏微分該函數，則可以得到各個參數的最佳解，最後就將最佳化問題轉換成二次式去求解，其數學式如下:
+	$$\max_{\alpha}\sum_{i=1}^{n}\alpha_i-\dfrac{1}{2}\sum_{i=1}^{n}\sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j x_i^T x_j$$
+	$$ subject\ to\quad \sum_{i=1}^{n}\alpha_i y_i=0$$
+	$$0\leq \alpha_i \leq C , \forall i = 1,...,n$$
+
+\newpage
+ 
+	上述遇到的問題，能解的前提都假設為資料為線性可分，所以當遇到資料為非線性可分的時候，需要搭配核函數(Kernel function)去解決問題，而核函數就是將這些非線性可分的資料，經過投影到更高維度的空間，進行分類得到非線性的決策邊界。如圖\ref{Fi3g13}為示意圖。
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{論文內放的截圖/kernel.png}
+	\caption{Kernel轉換示意圖}
+	(資料來源:https://www.syscom.com.tw/Print\_ Preview.aspx?id=634\&Group=3)
+	\label{Fi3g13}
+	\end{figure}
+	
+	SVM常用的Kernel function有4種，本研究則採用RBF kernel轉換，RBF因為是運用泰勒函數的原理去實施，所以能做到無限維的轉換，也導致能形成複雜的邊界，擁有很好的分類效果，是最常被使用的Kernel function，其函數表示如下:
+	$$K(x_i,x_j)=\exp\left(-\gamma \parallel x_i \cdot x_j \parallel^2\right) , \gamma>0$$
+	
+\newpage
+	
+\subsection{模型績效評估}
+
+	本研究欲比較詞向量和分類模型不同種組合的結果，則會透過混淆矩陣去可視化分類情形。如圖\ref{Fi3g14}。
+	
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{論文內放的截圖/混淆矩陣.png}
+	\caption{混淆矩陣}
+	\label{Fi3g14}
+	\end{figure}
+	
+\noindent 接續透過混淆矩陣內值去加以計算績效指標，本研究因為真實負面評論旅客的資料稀少，多數類別跟少數類別的數量相差極大，比值約略為32:1，所以將資料歸於不平衡的資料，當這類型的資料在做模型預測時，只要把結果全部判定為多數類別，就會有很高的Accuracy，但目標是將真實負面評論旅客找出來，所以模型評估選擇使用Recall和F1-Score，以及畫出模型的ROC曲線，透過這三種指標去比較不同組合下模型的表現。
+
+\noindent Recall是個很直觀的指標，實際為正類的樣本，模型預測也為正類樣本的機率值，其式子如下:
+	$$ Recall = \dfrac{TP}{TP+FN} $$
+	
+\noindent F1-score是同時考慮Recall和Precision的平衡指標，Precision是模型預測為正類樣本，實際為正類樣本的機率，其式子如下:
+	$$ Precision = \dfrac{TP}{TP+FP} $$
+
+	$$ F1-Score = \dfrac{2Precision\times Recall}{Precision+Recall} $$
+	
+\noindent ROC曲線是透過不同的闕值，將Recall和Specificity的結果繪製成一條曲線，Specificity是實際負類樣本，預測出來也為負類樣本的機率，其公式如下:
+	$$ Specificity = \dfrac{TN}{TN+FP} $$
+	
+模型評估可以通過AUC(ROC曲線下的面積)去比較不同的分類模型，當AUC越高時，代表模型的績效越好。如圖\ref{Fi3g15}。
+
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.65]{論文內放的截圖/roc曲線.jpg}
+	\caption{ROC Curve}
+	\label{Fi3g15}
+	\end{figure}
+
+%\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
